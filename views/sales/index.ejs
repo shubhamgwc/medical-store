@@ -1,0 +1,47 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <h1>Sales History</h1>
+  <a href="/sales/new" class="btn btn-primary">+ New Sale</a>
+</div>
+
+<div class="card filter-bar">
+  <form method="GET" action="/sales" class="filter-form">
+    <input type="text" name="search" placeholder="Search invoice / customer..." value="<%= search || '' %>" class="input">
+    <input type="date" name="from" value="<%= from || '' %>" class="input">
+    <input type="date" name="to" value="<%= to || '' %>" class="input">
+    <button type="submit" class="btn btn-primary">Filter</button>
+    <a href="/sales" class="btn btn-outline">Clear</a>
+  </form>
+</div>
+
+<div class="card">
+  <% if (!invoices.length) { %>
+    <div class="empty-state">No sales found.</div>
+  <% } else { %>
+  <table class="table">
+    <thead>
+      <tr><th>Invoice #</th><th>Customer</th><th>Date</th><th>Amount</th><th>Payment</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+      <% invoices.forEach(inv => { %>
+      <tr>
+        <td><span class="badge"><%= inv.invoice_number %></span></td>
+        <td><%= inv.customer_name || 'Walk-in' %><% if (inv.customer_phone) { %><br><small><%= inv.customer_phone %></small><% } %></td>
+        <td><%= new Date(inv.created_at).toLocaleString('en-IN') %></td>
+        <td><strong>₹<%= parseFloat(inv.total_amount).toFixed(2) %></strong></td>
+        <td><span class="chip"><%= inv.payment_method %></span></td>
+        <td class="actions">
+          <a href="/sales/<%= inv.id %>/receipt" class="btn btn-xs">Receipt</a>
+          <form method="POST" action="/sales/<%= inv.id %>?_method=DELETE" style="display:inline" onsubmit="return confirm('Delete this invoice? Stock will be restored.')">
+            <button type="submit" class="btn btn-xs btn-danger">Del</button>
+          </form>
+        </td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+  <% } %>
+</div>
+
+<%- include('../partials/footer') %>

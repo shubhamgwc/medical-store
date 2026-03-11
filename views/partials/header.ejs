@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= store.name %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="app-layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">
+      <span class="logo-icon">⚕</span>
+      <span class="logo-text"><%= store.name.split(' ')[0] %><br><small><%= store.name.split(' ').slice(1).join(' ') || 'Manager' %></small></span>
+    </div>
+    <nav class="nav">
+      <a href="/"          class="nav-item <%= page === 'dashboard' ? 'active' : '' %>"><span class="nav-icon">◉</span> Dashboard</a>
+      <a href="/medicines" class="nav-item <%= page === 'medicines' ? 'active' : '' %>"><span class="nav-icon">⬡</span> Medicines</a>
+      <a href="/sales/new" class="nav-item nav-cta"><span class="nav-icon">＋</span> New Sale</a>
+      <a href="/sales"     class="nav-item <%= page === 'sales'     ? 'active' : '' %>"><span class="nav-icon">◈</span> Sales</a>
+      <a href="/customers" class="nav-item <%= page === 'customers' ? 'active' : '' %>"><span class="nav-icon">◎</span> Customers</a>
+      <a href="/reports"   class="nav-item <%= page === 'reports'   ? 'active' : '' %>"><span class="nav-icon">◫</span> Reports</a>
+    </nav>
+    <div class="sidebar-footer">
+      <% if (locals.user) { %>
+        <div class="user-info">
+          <div class="user-avatar"><%= user.name.charAt(0).toUpperCase() %></div>
+          <div class="user-details">
+            <div class="user-name"><%= user.name %></div>
+            <div class="user-role"><%= user.role || 'admin' %></div>
+          </div>
+        </div>
+        <form method="POST" action="/auth/logout" style="margin-top:10px;">
+          <button type="submit" class="btn-logout">⎋ Sign out</button>
+        </form>
+      <% } else { %>
+        <div class="store-name"><%= store.name %></div>
+        <div class="store-date" id="current-date"></div>
+      <% } %>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Flash Messages -->
+    <% if (flash.success && flash.success.length) { %>
+      <% flash.success.forEach(msg => { %>
+        <div class="alert alert-success"><span class="alert-icon">✓</span> <%= msg %></div>
+      <% }) %>
+    <% } %>
+    <% if (flash.error && flash.error.length) { %>
+      <% flash.error.forEach(msg => { %>
+        <div class="alert alert-error"><span class="alert-icon">✕</span> <%= msg %></div>
+      <% }) %>
+    <% } %>
+    <% if (flash.warning && flash.warning.length) { %>
+      <% flash.warning.forEach(msg => { %>
+        <div class="alert alert-warning"><span class="alert-icon">⚠</span> <%= msg %></div>
+      <% }) %>
+    <% } %>
+    <% if (flash.info && flash.info.length) { %>
+      <% flash.info.forEach(msg => { %>
+        <div class="alert alert-info"><span class="alert-icon">ℹ</span> <%= msg %></div>
+      <% }) %>
+    <% } %>

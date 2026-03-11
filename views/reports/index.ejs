@@ -1,0 +1,124 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <h1>Reports</h1>
+</div>
+
+<div class="card filter-bar">
+  <form method="GET" action="/reports" class="filter-form">
+    <label style="color: var(--text-muted); font-size:13px">From:</label>
+    <input type="date" name="from" value="<%= from %>" class="input">
+    <label style="color: var(--text-muted); font-size:13px">To:</label>
+    <input type="date" name="to" value="<%= to %>" class="input">
+    <button type="submit" class="btn btn-primary">Generate</button>
+  </form>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card stat-green">
+    <div class="stat-icon">◈</div>
+    <div class="stat-value"><%= salesCount %></div>
+    <div class="stat-label">Total Sales</div>
+  </div>
+  <div class="stat-card stat-teal">
+    <div class="stat-icon">₹</div>
+    <div class="stat-value">₹<%= revenue %></div>
+    <div class="stat-label">Total Revenue</div>
+  </div>
+  <div class="stat-card <%= lowStock.length > 0 ? 'stat-red' : 'stat-gray' %>">
+    <div class="stat-icon">⚠</div>
+    <div class="stat-value"><%= lowStock.length %></div>
+    <div class="stat-label">Low Stock Items</div>
+  </div>
+  <div class="stat-card <%= expiringSoon.length > 0 ? 'stat-red' : 'stat-gray' %>">
+    <div class="stat-icon">📅</div>
+    <div class="stat-value"><%= expiringSoon.length %></div>
+    <div class="stat-label">Expiring in 60 days</div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <!-- Top Selling -->
+  <div class="card">
+    <div class="card-header"><h3>Top Selling Medicines</h3></div>
+    <% if (!topMedicines.length) { %>
+      <div class="empty-state">No sales in this period</div>
+    <% } else { %>
+    <table class="table">
+      <thead><tr><th>Medicine</th><th>Qty Sold</th><th>Revenue</th></tr></thead>
+      <tbody>
+        <% topMedicines.forEach(m => { %>
+        <tr>
+          <td><%= m.medicine_name %></td>
+          <td><strong><%= m.qty_sold %></strong></td>
+          <td>₹<%= parseFloat(m.revenue).toFixed(2) %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+    <% } %>
+  </div>
+
+  <!-- Low Stock -->
+  <div class="card">
+    <div class="card-header"><h3>Low Stock Alert</h3><a href="/medicines" class="btn btn-outline btn-sm">Manage</a></div>
+    <% if (!lowStock.length) { %>
+      <div class="empty-state">✓ All medicines have adequate stock</div>
+    <% } else { %>
+    <table class="table">
+      <thead><tr><th>Medicine</th><th>Current</th><th>Min</th></tr></thead>
+      <tbody>
+        <% lowStock.forEach(m => { %>
+        <tr>
+          <td><%= m.name %></td>
+          <td><span class="text-danger"><strong><%= m.stock_quantity %></strong></span></td>
+          <td><%= m.min_stock_alert %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+    <% } %>
+  </div>
+
+  <!-- Daily Sales -->
+  <% if (dailyBreakdown.length > 0) { %>
+  <div class="card">
+    <div class="card-header"><h3>Daily Sales Breakdown</h3></div>
+    <table class="table">
+      <thead><tr><th>Date</th><th>Sales</th><th>Revenue</th></tr></thead>
+      <tbody>
+        <% dailyBreakdown.forEach(d => { %>
+        <tr>
+          <td><%= new Date(d.date).toLocaleDateString('en-IN') %></td>
+          <td><%= d.count %></td>
+          <td>₹<%= parseFloat(d.revenue).toFixed(2) %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <% } %>
+
+  <!-- Expiring Soon -->
+  <div class="card">
+    <div class="card-header"><h3>Expiring in 60 Days</h3></div>
+    <% if (!expiringSoon.length) { %>
+      <div class="empty-state">✓ No medicines expiring soon</div>
+    <% } else { %>
+    <table class="table">
+      <thead><tr><th>Medicine</th><th>Stock</th><th>Expiry</th></tr></thead>
+      <tbody>
+        <% expiringSoon.forEach(m => { %>
+        <tr>
+          <td><%= m.name %></td>
+          <td><%= m.stock_quantity %></td>
+          <td><span class="badge badge-warn"><%= new Date(m.expiry_date).toLocaleDateString('en-IN') %></span></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

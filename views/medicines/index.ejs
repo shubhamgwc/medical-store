@@ -1,0 +1,110 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <h1>Medicines</h1>
+  <a href="/medicines/new" class="btn btn-primary">+ Add Medicine</a>
+</div>
+
+<!-- Search / Filter -->
+<div class="card filter-bar">
+  <form method="GET" action="/medicines" class="filter-form">
+    <input type="text" name="search" placeholder="Search by name..." value="<%= search || '' %>" class="input">
+    <select name="category" class="input">
+      <option value="">All Categories</option>
+      <% categories.forEach(c => { %>
+        <option value="<%= c.category %>" <%= category === c.category ? 'selected' : '' %>><%= c.category %></option>
+      <% }) %>
+    </select>
+    <button type="submit" class="btn btn-primary">Search</button>
+    <a href="/medicines" class="btn btn-outline">Clear</a>
+  </form>
+</div>
+
+<div class="card">
+  <% if (medicines.length === 0) { %>
+    <div class="empty-state">No medicines found. <a href="/medicines/new">Add one</a></div>
+  <% } else { %>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Name</th>
+        <th>Category</th>
+        <th>Stock</th>
+        <th>Selling Price</th>
+        <th>Expiry</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% medicines.forEach((med, i) => { %>
+      <tr class="<%= med.stock_quantity <= med.min_stock_alert ? 'row-warn' : '' %>">
+        <td><%= i+1 %></td>
+        <td>
+          <strong><%= med.name %></strong>
+          <% if (med.generic_name) { %><br><small><%= med.generic_name %></small><% } %>
+        </td>
+        <td><span class="chip"><%= med.category || '—' %></span></td>
+        <td>
+          <span class="<%= med.stock_quantity <= med.min_stock_alert ? 'text-danger' : 'text-success' %>">
+            <%= med.stock_quantity %> <%= med.unit %>
+          </span>
+        </td>
+        <td>₹<%= parseFloat(med.selling_price).toFixed(2) %></td>
+        <td>
+          <% if (med.expiry_date) { %>
+            <span class="<%= new Date(med.expiry_date) < new Date(Date.now() + 30*24*60*60*1000) ? 'text-danger' : '' %>">
+              <%= new Date(med.expiry_date).toLocaleDateString('en-IN') %>
+            </span>
+          <% } else { %>—<% } %>
+        </td>
+        <td class="actions">
+          <!-- Restock button -->
+          <button class="btn btn-xs btn-green" onclick="showRestock(<%= med.id %>, '<%= med.name.replace(/'/g, "\\'") %>')">Restock</button>
+          <a href="/medicines/<%= med.id %>/edit" class="btn btn-xs">Edit</a>
+          <form method="POST" action="/medicines/<%= med.id %>?_method=DELETE" style="display:inline" onsubmit="return confirm('Delete this medicine?')">
+            <button type="submit" class="btn btn-xs btn-danger">Del</button>
+          </form>
+        </td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+  <% } %>
+</div>
+
+<!-- Restock Modal -->
+<div id="restockModal" class="modal-overlay" style="display:none">
+  <div class="modal">
+    <h3>Restock Medicine</h3>
+    <p id="restockMedName" style="color: var(--accent)"></p>
+    <form id="restockForm" method="POST">
+      <input type="hidden" name="_method" value="POST">
+      <div class="form-group">
+        <label>Quantity to Add</label>
+        <input type="number" name="quantity" min="1" class="input" required placeholder="Enter quantity">
+      </div>
+      <div class="form-group">
+        <label>Reason</label>
+        <input type="text" name="reason" class="input" placeholder="e.g. New purchase" value="Restock">
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Add Stock</button>
+        <button type="button" class="btn btn-outline" onclick="closeRestock()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function showRestock(id, name) {
+  document.getElementById('restockMedName').textContent = name;
+  document.getElementById('restockForm').action = '/medicines/' + id + '/restock';
+  document.getElementById('restockModal').style.display = 'flex';
+}
+function closeRestock() {
+  document.getElementById('restockModal').style.display = 'none';
+}
+</script>
+
+<%- include('../partials/footer') %>

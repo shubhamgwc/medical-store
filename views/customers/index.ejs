@@ -1,0 +1,43 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <h1>Customers</h1>
+  <a href="/customers/new" class="btn btn-primary">+ Add Customer</a>
+</div>
+
+<div class="card filter-bar">
+  <form method="GET" action="/customers" class="filter-form">
+    <input type="text" name="search" placeholder="Search by name or phone..." value="<%= search || '' %>" class="input">
+    <button type="submit" class="btn btn-primary">Search</button>
+    <a href="/customers" class="btn btn-outline">Clear</a>
+  </form>
+</div>
+
+<div class="card">
+  <% if (!customers.length) { %>
+    <div class="empty-state">No customers found.</div>
+  <% } else { %>
+  <table class="table">
+    <thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Purchases</th><th>Total Spent</th><th>Actions</th></tr></thead>
+    <tbody>
+      <% customers.forEach(c => { %>
+      <tr>
+        <td><strong><%= c.name %></strong></td>
+        <td><%= c.phone || '—' %></td>
+        <td><%= c.email || '—' %></td>
+        <td><%= c.total_purchases %></td>
+        <td>₹<%= parseFloat(c.total_spent).toFixed(2) %></td>
+        <td class="actions">
+          <a href="/customers/<%= c.id %>/edit" class="btn btn-xs">Edit</a>
+          <form method="POST" action="/customers/<%= c.id %>?_method=DELETE" style="display:inline" onsubmit="return confirm('Delete customer?')">
+            <button type="submit" class="btn btn-xs btn-danger">Del</button>
+          </form>
+        </td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+  <% } %>
+</div>
+
+<%- include('../partials/footer') %>

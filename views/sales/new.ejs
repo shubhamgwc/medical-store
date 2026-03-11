@@ -1,0 +1,211 @@
+<%- include('../partials/header') %>
+
+  <div class="page-header">
+    <h1>New Sale</h1>
+    <a href="/sales" class="btn btn-outline">← Back</a>
+  </div>
+
+  <div class="pos-layout">
+    <!-- Left: Medicine Search & Cart -->
+    <div class="pos-left">
+      <div class="card">
+        <h3>Add Items</h3>
+        <div class="search-box">
+          <input type="text" id="medSearch" class="input" placeholder="Search medicine by name..." autocomplete="off">
+          <div id="searchResults" class="search-dropdown"></div>
+        </div>
+        <div id="cart" class="cart">
+          <div class="cart-empty" id="cartEmpty">Cart is empty — search and add medicines above</div>
+          <table class="table" id="cartTable" style="display:none">
+            <thead>
+              <tr>
+                <th>Medicine</th>
+                <th>Price</th>
+                <th>Qty</th>
+                <th>Total</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="cartBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Customer & Totals -->
+    <div class="pos-right">
+      <div class="card">
+        <h3>Customer</h3>
+        <div class="form-group">
+          <label>Customer Name</label>
+          <input type="text" id="customerName" class="input" placeholder="Walk-in Customer" value="Walk-in Customer">
+        </div>
+        <div class="form-group">
+          <label>Phone</label>
+          <input type="text" id="customerPhone" class="input" placeholder="Phone number">
+        </div>
+        <div class="form-group">
+          <label>Or Select Existing</label>
+          <select id="customerId" class="input" onchange="fillCustomer(this)">
+            <option value="">— Select Customer —</option>
+            <% customers.forEach(c=> { %>
+              <option value="<%= c.id %>" data-name="<%= c.name %>" data-phone="<%= c.phone || '' %>">
+                <%= c.name %> (<%= c.phone || 'no phone' %>)
+              </option>
+              <% }) %>
+          </select>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Totals</h3>
+        <div class="totals-row"><span>Subtotal</span><span id="subtotalDisplay">₹0.00</span></div>
+        <div class="form-group">
+          <label>Discount (%)</label>
+          <input type="number" id="discountPct" class="input input-sm" value="0" min="0" max="100"
+            oninput="recalculate()">
+        </div>
+        <div class="form-group">
+          <label>Tax (%)</label>
+          <input type="number" id="taxPct" class="input input-sm" value="0" min="0" max="100" oninput="recalculate()">
+        </div>
+        <div class="totals-row totals-total"><span>Total</span><span id="totalDisplay">₹0.00</span></div>
+        <div class="form-group">
+          <label>Payment Method</label>
+          <select id="paymentMethod" class="input">
+            <option value="cash">Cash</option>
+            <option value="upi">UPI</option>
+            <option value="card">Card</option>
+            <option value="credit">Credit</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Notes</label>
+          <input type="text" id="notes" class="input" placeholder="Optional notes">
+        </div>
+        <button class="btn btn-primary btn-block" onclick="submitSale()">💳 Complete Sale & Print Receipt</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden form for submission -->
+  <form id="saleForm" method="POST" action="/sales" style="display:none">
+    <input type="hidden" name="customer_name" id="f_customer_name">
+    <input type="hidden" name="customer_phone" id="f_customer_phone">
+    <input type="hidden" name="customer_id" id="f_customer_id">
+    <input type="hidden" name="discount_percent" id="f_discount">
+    <input type="hidden" name="tax_percent" id="f_tax">
+    <input type="hidden" name="payment_method" id="f_payment">
+    <input type="hidden" name="notes" id="f_notes">
+    <input type="hidden" name="items" id="f_items">
+  </form>
+
+  <script>
+    const medicines = <% - JSON.stringify(medicines) %>;
+    let cart = [];
+
+    const medSearch = document.getElementById('medSearch');
+    const searchResults = document.getElementById('searchResults');
+
+    medSearch.addEventListener('input', function () {
+      const q = this.value.toLowerCase().trim();
+      if (!q) { searchResults.innerHTML = ''; searchResults.style.display = 'none'; return; }
+      const matches = medicines.filter(m => m.name.toLowerCase().includes(q) || (m.generic_name && m.generic_name.toLowerCase().includes(q)));
+      if (!matches.length) { searchResults.innerHTML = '<div class="sr-item">No results</div>'; searchResults.style.display = 'block'; return; }
+      searchResults.innerHTML = matches.slice(0, 8).map(m =>
+        `<div class="sr-item" onclick="addToCart(${m.id})">
+      <strong>${m.name}</strong> <small>${m.generic_name || ''}</small>
+      <span class="sr-meta">Stock: ${m.stock_quantity} | ₹${parseFloat(m.selling_price).toFixed(2)}</span>
+    </div>`
+      ).join('');
+      searchResults.style.display = 'block';
+    });
+
+    document.addEventListener('click', e => { if (!e.target.closest('.search-box')) searchResults.style.display = 'none'; });
+
+    function addToCart(id) {
+      const med = medicines.find(m => m.id === id);
+      if (!med) return;
+      const existing = cart.find(i => i.medicine_id === id);
+      if (existing) {
+        if (existing.quantity >= med.stock_quantity) { alert('Not enough stock!'); return; }
+        existing.quantity++;
+        existing.subtotal = existing.quantity * existing.unit_price;
+      } else {
+        if (med.stock_quantity <= 0) { alert('Out of stock!'); return; }
+        cart.push({ medicine_id: id, medicine_name: med.name, quantity: 1, unit_price: parseFloat(med.selling_price), subtotal: parseFloat(med.selling_price), max_stock: med.stock_quantity });
+      }
+      medSearch.value = '';
+      searchResults.style.display = 'none';
+      renderCart();
+    }
+
+    function updateQty(id, val) {
+      const item = cart.find(i => i.medicine_id === id);
+      if (!item) return;
+      const q = parseInt(val);
+      if (q <= 0) { removeFromCart(id); return; }
+      if (q > item.max_stock) { alert(`Only ${item.max_stock} in stock`); return; }
+      item.quantity = q;
+      item.subtotal = q * item.unit_price;
+      renderCart();
+    }
+
+    function removeFromCart(id) {
+      cart = cart.filter(i => i.medicine_id !== id);
+      renderCart();
+    }
+
+    function renderCart() {
+      const body = document.getElementById('cartBody');
+      const table = document.getElementById('cartTable');
+      const empty = document.getElementById('cartEmpty');
+      if (!cart.length) { table.style.display = 'none'; empty.style.display = 'block'; recalculate(); return; }
+      table.style.display = 'table';
+      empty.style.display = 'none';
+      body.innerHTML = cart.map(item =>
+        `<tr>
+      <td>${item.medicine_name}</td>
+      <td>₹${item.unit_price.toFixed(2)}</td>
+      <td><input type="number" value="${item.quantity}" min="1" max="${item.max_stock}" class="input input-qty" onchange="updateQty(${item.medicine_id}, this.value)"></td>
+      <td><strong>₹${item.subtotal.toFixed(2)}</strong></td>
+      <td><button class="btn btn-xs btn-danger" onclick="removeFromCart(${item.medicine_id})">✕</button></td>
+    </tr>`
+      ).join('');
+      recalculate();
+    }
+
+    function recalculate() {
+      const sub = cart.reduce((s, i) => s + i.subtotal, 0);
+      const disc = parseFloat(document.getElementById('discountPct').value) || 0;
+      const tax = parseFloat(document.getElementById('taxPct').value) || 0;
+      const discAmt = sub * disc / 100;
+      const taxAmt = (sub - discAmt) * tax / 100;
+      const total = sub - discAmt + taxAmt;
+      document.getElementById('subtotalDisplay').textContent = '₹' + sub.toFixed(2);
+      document.getElementById('totalDisplay').textContent = '₹' + total.toFixed(2);
+    }
+
+    function fillCustomer(sel) {
+      const opt = sel.options[sel.selectedIndex];
+      if (opt.value) {
+        document.getElementById('customerName').value = opt.dataset.name;
+        document.getElementById('customerPhone').value = opt.dataset.phone;
+      }
+    }
+
+    function submitSale() {
+      if (!cart.length) { alert('Please add at least one item!'); return; }
+      document.getElementById('f_customer_name').value = document.getElementById('customerName').value || 'Walk-in Customer';
+      document.getElementById('f_customer_phone').value = document.getElementById('customerPhone').value;
+      document.getElementById('f_customer_id').value = document.getElementById('customerId').value;
+      document.getElementById('f_discount').value = document.getElementById('discountPct').value;
+      document.getElementById('f_tax').value = document.getElementById('taxPct').value;
+      document.getElementById('f_payment').value = document.getElementById('paymentMethod').value;
+      document.getElementById('f_notes').value = document.getElementById('notes').value;
+      document.getElementById('f_items').value = JSON.stringify(cart);
+      document.getElementById('saleForm').submit();
+    }
+  </script>
+
+  <%- include('../partials/footer') %>

@@ -1,0 +1,11 @@
+<%- include('../partials/header') %>
+<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;">
+  <div style="font-size:80px;margin-bottom:16px;">⚠</div>
+  <h1 style="font-family:'Syne',sans-serif;font-size:48px;font-weight:800;color:var(--danger);">500</h1>
+  <p style="color:var(--text-muted);font-size:16px;margin:8px 0;">Something went wrong on our end</p>
+  <% if (message && process.env.NODE_ENV !== 'production') { %>
+    <code style="background:#f5f5f5;padding:10px 16px;border-radius:6px;font-size:13px;margin:12px 0;display:block;max-width:600px;word-break:break-all;"><%= message %></code>
+  <% } %>
+  <a href="/" class="btn btn-primary" style="margin-top:16px">← Back to Dashboard</a>
+</div>
+<%- include('../partials/footer') %>

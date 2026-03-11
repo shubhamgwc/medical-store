@@ -1,0 +1,110 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <h1>Dashboard</h1>
+  <p>Welcome back — here’s your Medistore overview</p>
+</div>
+
+<div class="stats-grid">
+
+  <div class="stat-card stat-blue">
+    <div class="stat-icon">⬡</div>
+    <div class="stat-value"><%= totalMedicines %></div>
+    <div class="stat-label">Total Medicines</div>
+  </div>
+
+  <div class="stat-card stat-green">
+    <div class="stat-icon">◈</div>
+    <div class="stat-value"><%= todaySalesCount %></div>
+    <div class="stat-label">Today's Sales</div>
+  </div>
+
+  <div class="stat-card stat-teal">
+    <div class="stat-icon">₹</div>
+    <div class="stat-value">₹<%= todayRevenue %></div>
+    <div class="stat-label">Today's Revenue</div>
+  </div>
+
+  <div class="stat-card <%= lowStockCount > 0 ? 'stat-red' : 'stat-gray' %>">
+    <div class="stat-icon">⚠</div>
+    <div class="stat-value"><%= lowStockCount %></div>
+    <div class="stat-label">Low Stock Alerts</div>
+  </div>
+
+</div>
+
+<div class="grid-2">
+
+  <!-- Recent Sales -->
+  <div class="card">
+    <div class="card-header">
+      <h3>Recent Sales</h3>
+      <a href="/sales/new" class="btn btn-primary btn-sm">New Sale</a>
+    </div>
+
+    <% if (!recentSales.length) { %>
+      <div class="empty-state">No sales yet today</div>
+    <% } else { %>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Invoice</th>
+            <th>Customer</th>
+            <th>Amount</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% recentSales.forEach(sale => { %>
+            <tr>
+              <td><span class="badge"><%= sale.invoice_number %></span></td>
+              <td><%= sale.customer_name || 'Walk-in' %></td>
+              <td><strong>₹<%= parseFloat(sale.total_amount).toFixed(2) %></strong></td>
+              <td>
+                <a href="/sales/<%= sale.id %>/receipt" class="btn btn-xs">Receipt</a>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } %>
+  </div>
+
+  <!-- Expiring Soon -->
+  <div class="card">
+    <div class="card-header">
+      <h3>Expiring in 30 Days</h3>
+      <a href="/medicines" class="btn btn-outline btn-sm">View All</a>
+    </div>
+
+    <% if (!expiringSoon.length) { %>
+      <div class="empty-state">✓ No medicines expiring soon</div>
+    <% } else { %>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Medicine</th>
+            <th>Stock</th>
+            <th>Expires</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% expiringSoon.forEach(med => { %>
+            <tr>
+              <td><%= med.name %></td>
+              <td><%= med.stock_quantity %></td>
+              <td>
+                <span class="badge badge-warn">
+                  <%= new Date(med.expiry_date).toLocaleDateString('en-IN') %>
+                </span>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } %>
+  </div>
+
+</div>
+
+<%- include('../partials/footer') %>
