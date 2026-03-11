@@ -10,13 +10,23 @@ class AuthRepository {
     return result.rows[0] || null;
   }
 
-  async create({ name, email, password }) {
+  async create(data) {
+    const { first_name, last_name, email, password, phone } = data;
+
     const result = await db.query(
-      `INSERT INTO users (name, email, password)
-       VALUES ($1, $2, $3)
-       RETURNING id, name, email, role`,
-      [name, email, password]
+      `INSERT INTO users 
+       (first_name, last_name, email, password, phone) 
+       VALUES ($1,$2,$3,$4,$5) 
+       RETURNING id, first_name, last_name, email`,
+      [
+        first_name,
+        last_name || null,
+        email,
+        password,
+        phone || null
+      ]
     );
+
     return result.rows[0];
   }
 }

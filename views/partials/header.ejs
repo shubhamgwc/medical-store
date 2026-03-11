@@ -24,21 +24,8 @@
       <a href="/reports"   class="nav-item <%= page === 'reports'   ? 'active' : '' %>"><span class="nav-icon">◫</span> Reports</a>
     </nav>
     <div class="sidebar-footer">
-      <% if (locals.user) { %>
-        <div class="user-info">
-          <div class="user-avatar"><%= user.name.charAt(0).toUpperCase() %></div>
-          <div class="user-details">
-            <div class="user-name"><%= user.name %></div>
-            <div class="user-role"><%= user.role || 'admin' %></div>
-          </div>
-        </div>
-        <form method="POST" action="/auth/logout" style="margin-top:10px;">
-          <button type="submit" class="btn-logout">⎋ Sign out</button>
-        </form>
-      <% } else { %>
-        <div class="store-name"><%= store.name %></div>
-        <div class="store-date" id="current-date"></div>
-      <% } %>
+      <div class="store-name"><%= store.name %></div>
+      <div class="store-date" id="current-date"></div>
     </div>
   </aside>
 
