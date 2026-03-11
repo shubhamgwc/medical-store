@@ -32,13 +32,13 @@ app.use(rateLimit({
   },
 }));
 
-if (process.env.NODE_ENV === 'production') {
-  require('./config/setupDb');
-}
-// ─── Logging ─────────────────────────────────────────────────────────────────
-if (NODE_ENV !== 'test') {
-  app.use(morgan(NODE_ENV === 'production' ? 'combined' : 'dev'));
-}
+// if (process.env.NODE_ENV === 'production') {
+//   require('./config/setupDb');
+// }
+// // ─── Logging ─────────────────────────────────────────────────────────────────
+// if (NODE_ENV !== 'test') {
+//   app.use(morgan(NODE_ENV === 'production' ? 'combined' : 'dev'));
+// }
 
 // ─── View Engine ─────────────────────────────────────────────────────────────
 app.set('view engine', 'ejs');
